@@ -56,20 +56,44 @@
         }
 
         /* Added styles */
-        .overlay a {
+        .button-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #fff;
+        }
+
+        .button-container button {
             background-color: rgba(0, 0, 0, 0.5);
             color: #fff;
             border: none;
             padding: 10px;
             cursor: pointer;
-            text-decoration: none;
+            font-size: 16px;
         }
 
-        .overlay a:hover {
-            text-decoration: underline;
+        .button-container button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .download-button {
+            margin: 0 auto;
+        }
+
+        /* Membuat button next di kanan */
+        .next-button {
+            margin-left: auto;
+        }
+
+        /* Membuat button back di kiri */
+        .back-button {
+            margin-right: auto;
         }
     </style>
 </head>
@@ -77,13 +101,18 @@
 <body>
     <div class="container" id="videoContainer">
         <div class="video">
-            <video id="video" src="" autoplay></video>
-            <div class="overlay">
+            <video id="video" src="" autoplay loop></video>
+            <!-- <div class="overlay">
                 <button id="backButton">Kembali</button>
                 <button id="nextButton">Berikutnya</button>
-                <a id="downloadButton" href="">Unduh</a>
-            </div>
+                <button id="downloadButton" class="download-button">Unduh</button>
+            </div> -->
         </div>
+    </div>
+    <div class="button-container">
+        <button id="backButton">Kembali</button>
+          <a id="downloadButton" href="#">Unduh</a>
+        <button id="nextButton">Berikutnya</button>
     </div>
     <script>
         const usernames = [
@@ -111,7 +140,10 @@
                 if (res.result && res.result.data && res.result.data.video) {
                     const videoSrc = res.result.data.video;
                     video.src = videoSrc;
-                    video.load();
+                    const a = downloadButton;
+                    a.href = "#";
+                    a.download = "video.mp4";
+                    downloadVideo(videoSrc);
                 } else {
                     console.error('Failed to fetch video data');
                 }
@@ -167,25 +199,33 @@
             }
         });
 
-        // Added download functionality
-        async function downloadVideo() {
-            try {
-                const response = await fetch(`https://aemt.me/download/asupantt?username=${usernames[currentVideoIndex]}`);
-                const res = await response.json();
-                if (res.result && res.result.data && res.result.data.video) {
-                    const videoSrc = res.result.data.video;
-                    const a = downloadButton;
-                    a.href = videoSrc;
-                    a.download = 'video.mp4';
-                } else {
-                    console.error('Failed to fetch video data');
-                }
-            } catch (error) {
-                console.error('Error fetching video:', error);
-            }
+      async function downloadVideo(videoUrl) {
+        const permission = await navigator.permissions.query('downloads');
+        if (permission.state === 'granted') {
+          // Download video
+          const response = await fetch(videoUrl);
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = downloadButton;
+          a.href = url;
+          a.download = 'video.mp4';
+        } else {
+          // Request permission
+          const result = await navigator.permissions.request({
+            name: 'downloads',
+            sysex: true, // Show system prompt to grant permission
+          });
+          if (result.state === 'granted') {
+            // Download video
+            const response = await fetch(videoUrl);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = downloadButton;
+            a.href = url;
+            a.download = 'video.mp4';
+          }
         }
-
-        downloadButton.addEventListener('click', downloadVideo);
+      }
     </script>
 </body>
 </html>

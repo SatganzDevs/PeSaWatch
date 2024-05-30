@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaWatch!</title>
+<style>
+body,
+html {
+margin: 0;
+padding: 0;
+height: 100vh;
+overflow: hidden;
+font-family: Arial, sans-serif;
+}
+.container {
+display: flex;
+flex-direction: column;
+height: 100vh;
+overflow-y: scroll;
+scroll-snap-type: y mandatory;
+}
+.video {
+scroll-snap-align: start;
+flex: 1 0 100%;
+display: flex;
+align-items: center;
+justify-content: center;
+background-color: #000;
+color: #fff;
+font-size: 24px;
+position: relative;
+}
+video {
+width: 100%;
+height: 100%;
+object-fit: cover;
+}
+</style>
+</head>
+
+<body>
+<div class="container" id="videoContainer">
+</div>
+<script>
+const username = ['ourhearts30','dennnyn']
+const videoContainer = document.getElementById('videoContainer');
+let videoCount = 0;
+let observer;
+let currentVideo = null;
+function createVideoElement(src) {
+const videoDiv = document.createElement('div');
+videoDiv.className = 'video';
+const video = document.createElement('video');
+video.src = src;
+video.controls = true;
+videoDiv.appendChild(video);
+return videoDiv;
+}
+
+async function loadMoreVideos() {
+for (let i = 0; i < 10; i++) {
+videoCount++;
+try {
+const response = await fetch(`https://aemt.me/download/asupantt?username=${username[Math.floor(Math.random() * username.length)]}`);
+const res = await response.json();
+if (res.result && res.result.data && res.result.data.video) {
+const videoSrc = res.result.data.video;
+const videoElement = createVideoElement(videoSrc);
+videoContainer.appendChild(videoElement);
+} else {
+console.error('Failed to fetch video data');
+}
+} catch (error) {
+console.error('Error fetching video:', error);
+}
+}
+}
+observer = new IntersectionObserver((entries) => {
+entries.forEach((entry) => {
+if (entry.isIntersecting) {
+if (currentVideo) {
+currentVideo.pause();
+}
+currentVideo = entry.target.querySelector('video');
+currentVideo.play();
+} else {
+if (entry.target.querySelector('video') === currentVideo) {
+currentVideo.pause();
+currentVideo = null;
+}
+}
+});
+}, {threshold: 1.0});
+loadMoreVideos();
+videoContainer.addEventListener('scroll', () => {
+if (videoContainer.scrollTop + videoContainer.clientHeight >= videoContainer.scrollHeight) {
+loadMoreVideos();
+}
+Array.from(videoContainer.children).forEach((child) => {
+observer.observe(child);
+});
+});
+</script>
+</body>
+</html>

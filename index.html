@@ -47,7 +47,7 @@ const username = ['risti_aprilianti','dumpnazzz','cherilyn_lyn','amnddiah_','kka
 const videoContainer = document.getElementById('videoContainer');
 let videoCount = 0;
 let observer;
-let currentVideo = null;
+
 function createVideoElement(src) {
 const videoDiv = document.createElement('div');
 videoDiv.className = 'video';
@@ -68,6 +68,13 @@ if (res.result && res.result.data && res.result.data.video) {
 const videoSrc = res.result.data.video;
 const videoElement = createVideoElement(videoSrc);
 videoContainer.appendChild(videoElement);
+
+// Lazy load videos using Intersection Observer API
+if (videoCount < 3) {
+videoElement.load();
+} else {
+observeVideo(videoElement);
+}
 } else {
 console.error('Failed to fetch video data');
 }
@@ -76,29 +83,26 @@ console.error('Error fetching video:', error);
 }
 }
 }
-observer = new IntersectionObserver((entries) => {
-entries.forEach((entry) => {
-if (entry.isIntersecting) {
-if (currentVideo) {
-currentVideo.pause();
+
+function observeVideo(video) {
+const observer = new IntersectionObserver((entries) => {
+if (entries[0].isIntersecting) {
+video.load();
+observer.disconnect();
 }
-currentVideo = entry.target.querySelector('video');
-currentVideo.play();
-} else {
-if (entry.target.querySelector('video') === currentVideo) {
-currentVideo.pause();
-currentVideo = null;
+}, {threshold: 0.5});
+observer.observe(video);
 }
-}
-});
-}, {threshold: 1.0});
+
 loadMoreVideos();
-videoContainer.addEventListener('scroll', () => {
+videoContainer.addEventListener('scroll', ()=> {
 if (videoContainer.scrollTop + videoContainer.clientHeight >= videoContainer.scrollHeight) {
 loadMoreVideos();
 }
 Array.from(videoContainer.children).forEach((child) => {
-observer.observe(child);
+if (child.classList.contains('video')) {
+observeVideo(child);
+}
 });
 });
 </script>

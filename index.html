@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -169,8 +168,6 @@
         });
 
       async function downloadVideo(videoUrl) {
-        const permission = await navigator.permissions.query('downloads');
-        if (permission.state === 'granted') {
           // Download video
           const response = await fetch(videoUrl);
           const blob = await response.blob();
@@ -178,22 +175,6 @@
           const a = downloadButton;
           a.href = url;
           a.download = 'video.mp4';
-        } else {
-          // Request permission
-          const result = await navigator.permissions.request({
-            name: 'downloads',
-            sysex: true, // Show system prompt to grant permission
-          });
-          if (result.state === 'granted') {
-            // Download video
-            const response = await fetch(videoUrl);
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            const a = downloadButton;
-            a.href = url;
-            a.download = 'video.mp4';
-          }
-        }
       }
     </script>
 </body>
